@@ -1,0 +1,179 @@
+{-# OPTIONS --safe -- #-}
+
+module Basic where
+
+open import Data.Empty
+open import Data.Product
+open import Data.Sum renaming ([_,_] to ⊎-elim)
+open import Relation.Binary.PropositionalEquality
+open import Relation.Nullary using (¬_)
+open import Relation.Nullary.Negation
+open import Function.Base using (_$_)
+open import Data.Unit.Base using (⊤ ; tt)
+
+
+open import Semantics
+open Model
+
+
+record Prop (M : Model) : Set₁ where
+  field
+    val : 𝐖 M → Set₀
+    
+open Prop public
+
+
+_,_⊨_ : ∀ (M : Model) → 𝐖 M → Prop M → Set₀
+M , w ⊨ F = val F w
+
+infixr 10 _,_⊨_
+
+
+{-
+
+Valid : ∀ (M : Model) → Prop M → Set₀
+Valid M A = ∀ (w : 𝐖 M) → M , w ⊨ A
+
+⊨_ : (∀ (M : Model) → Prop M) → Set₁            Мне кажется, что эти определения излишние для нашего shallow embedding.
+⊨ A = ∀ (M' : Model) → Valid M' (A M')        Так что можно пока их считать просто упражнением на формализацию  
+
+
+infixr 9  ⊨_
+
+-}
+
+□_ : ∀ {M : Model} → Prop M → Prop M
+□_ {M} F =
+  record
+    { val = λ w →
+        ∀ w' →
+        𝐑 M w w' →
+        M , w' ⊨ F
+    }
+
+
+◇_ : ∀ {M : Model} → Prop M → Prop M
+◇_ {M} F =
+  record
+    { val = λ w →
+        Σ (𝐖 M) λ w' →
+        𝐑 M w w' × M , w' ⊨ F
+    }
+
+
+~_ : ∀ {M : Model} → Prop M → Prop M
+~_ {M} F =
+  record
+    { val = λ w →
+        ¬ (M , w ⊨ F)
+    }
+
+
+_⇒_ : ∀ {M : Model} → Prop M → Prop M → Prop M
+_⇒_ {M} A B =
+  record
+    { val = λ w →
+        M , w ⊨ A →
+        M , w ⊨ B
+    }
+
+
+_∧_ : ∀ {M : Model} → Prop M → Prop M → Prop M
+_∧_ {M} A B =
+  record
+    { val = λ w →
+        (M , w ⊨ A) ×
+        (M , w ⊨ B)
+    }
+
+
+_∨_ : ∀ {M : Model} → Prop M → Prop M → Prop M
+_∨_ {M} A B =
+  record
+    { val = λ w →
+        (M , w ⊨ A) ⊎
+        (M , w ⊨ B)
+    }
+
+
+_⇔_ : ∀ {M : Model} → Prop M → Prop M → Prop M
+_⇔_ {M} A B =
+  (A ⇒ B) ∧ (B ⇒ A)
+
+
+∀ᵐ[_] : ∀ {M : Model} → (𝐃 M → Prop M) → Prop M
+∀ᵐ[ P ] =
+  record
+    { val = λ w →
+        ∀ d →
+        val (P d) w
+    }
+
+
+∃ᵐ[_] : ∀ {M : Model} → (𝐃 M → Prop M) → Prop M
+∃ᵐ[ P ] =
+  record
+    { val = λ w →
+        Σ _ λ d →
+        val (P d) w
+    }
+
+
+_>_ : ∀ {M : Model} → Prop M → Prop M → Prop M
+_>_ {M} A B =
+  record
+    { val = λ w →
+        ∀ w' →
+        𝐅 M (val A) w w' →
+        M , w' ⊨ B
+    }
+
+
+infixr 100 ~_
+infixr 100 □_
+infixr 100 ◇_
+infixr 50 _∨_
+infixr 40 _∧_
+infixr 30 _⇒_
+infixr 20 _⇔_
+infixr 15 _>_
+infixr 100 ∀ᵐ[_]
+infixr 100 ∃ᵐ[_]
+
+Reflexive : ∀ (M : Model) → Set₀
+Reflexive (M) = ∀ w → 𝐑 M w w
+
+
+Symmetric : ∀ (M : Model) → Set₀
+Symmetric (M) = ∀ {w w'} → 𝐑 M w w' → 𝐑 M w' w
+
+
+Transitive : ∀ (M : Model) → Set₀
+Transitive (M) = ∀ {w w' w''} → 𝐑 M w w' → 𝐑 M w' w'' → 𝐑 M w w''
+
+
+Serial : ∀ (M : Model) → Set₀
+Serial (M) = ∀ w → Σ (𝐖 M) λ w' → 𝐑 M w w'
+
+
+Euclidean : ∀ (M : Model) → Set₀
+Euclidean (M) = ∀ {w v u} → 𝐑 M w v → 𝐑 M w u → 𝐑 M v u
+
+Universal : ∀ (M : Model) → Set₀
+Universal M = ∀ w w' → 𝐑 M w w'
+
+data Worlds-1 : Set₀ where
+ world-one : Worlds-1
+
+data Worlds-2 : Set₀ where
+ world-one : Worlds-2
+ world-two : Worlds-2
+
+data Worlds-3 : Set₀ where
+ world-one : Worlds-3
+ world-two : Worlds-3
+ world-three : Worlds-3
+
+
+
+
