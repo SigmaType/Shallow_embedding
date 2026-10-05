@@ -191,3 +191,14 @@ ex_intro {M} {w} {P} d H =  d , H
 ex_elim : ∀ {M : Model} {w w' : 𝐖 M} {P : 𝐃 M → Prop M} {C : Prop M} → M , w ⊨ ∃ᵐ[ P ] → (∀ d → M , w ⊨ P d →  M , w' ⊨ C) → M , w' ⊨ C
 ex_elim (d , Pd) H1 = H1 d Pd
 
+
+Barcan_rev : ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} → (M , w ⊨ □ ∀ᵐ[ P ]) → (M , w ⊨ ∀ᵐ[ (λ d → □ (P d)) ]) 
+Barcan_rev {M} {w} {P} H d w' Rww' = Goal where
+
+ L1 : M , w' ⊨  ∀ᵐ[ P ]
+ L1 = box_elim {M = M} H Rww'
+
+ L2 : M , w' ⊨ P d
+ L2 = all_elim {P = P} d L1
+
+ Goal = L2
