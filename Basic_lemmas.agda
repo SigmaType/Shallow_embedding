@@ -170,8 +170,8 @@ box_elim {M} {w}{w'} {A} H H1 = H w' H1
 diamond_intro : ∀ {M : Model} {w w' : 𝐖 M} {A : Prop M} → 𝐑 M w w' → M , w' ⊨ A → M , w ⊨ ◇ A
 diamond_intro {M} {w}{w'} {P} H H1 = w' , H , H1
 
-diamond_elim : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} → M , w ⊨ ◇ A → (∀ w' → M , w' ⊨ A →  M , w ⊨ B) → M , w ⊨ B
-diamond_elim {M} {w} {A} {B} (w' , Rww' , H1) H2 =  H2 w' H1
+diamond_elim : ∀ {M : Model} {w w' : 𝐖 M} {A B : Prop M} → M , w ⊨ ◇ A → (∀ g → 𝐑 M w g → M , g ⊨ A → M , w' ⊨ B) → M , w' ⊨ B
+diamond_elim {M} {w}{w'} {A} {B} (w0 , Rww0 , H1) H2 =  H2 w0 Rww0 H1
 
 >_intro : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  (∀ w' → 𝐅 M (val A) w w' → M , w' ⊨ B)  →  M , w ⊨ A > B
 >_intro {M} {w} {A} H w' H1 = H w' H1
@@ -188,6 +188,6 @@ all_elim = λ d H → H d
 ex_intro :  ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} (d :  𝐃 M) →  M , w ⊨ P d → M , w ⊨ ∃ᵐ[ P ]
 ex_intro {M} {w} {P} d H =  d , H
 
-ex_elim : ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} {C : Prop M} → M , w ⊨ ∃ᵐ[ P ] → (∀ d → M , w ⊨ P d →  M , w ⊨ C) → M , w ⊨ C
+ex_elim : ∀ {M : Model} {w w' : 𝐖 M} {P : 𝐃 M → Prop M} {C : Prop M} → M , w ⊨ ∃ᵐ[ P ] → (∀ d → M , w ⊨ P d →  M , w' ⊨ C) → M , w' ⊨ C
 ex_elim (d , Pd) H1 = H1 d Pd
 
