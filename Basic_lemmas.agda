@@ -14,6 +14,7 @@ open import Semantics
 open import Basic
 open Model
 
+
 K_axiom : ∀ (M : Model) (w : 𝐖 M) (A B : Prop M) → M , w ⊨ □ (A ⇒ B) →  M , w ⊨ □ A ⇒ □ B
 K_axiom M w A B H1 H2 = Goal where
 
@@ -123,3 +124,70 @@ Barcan M w P H w' R d = Goal where
  H-unfolded = H
 
  Goal = H d w' R
+
+ {- Создадим инфраструктуру натуральной дедукции. Да, доказательства тривиальные. Зато теперь можно будет писать рассуждения более
+ привычным образом-}
+
+imp_intro : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} → (M , w ⊨ A → M , w ⊨ B) →  M , w ⊨ A ⇒ B
+imp_intro {M} {w} {A} {B} H H1 = H H1
+
+imp_elim : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  M , w ⊨ A ⇒ B →  M , w ⊨ A  →  M , w ⊨ B
+imp_elim{M} {w} {A} {B} H H1 = H H1
+
+and_intro :  ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  M , w ⊨ A  →  M , w ⊨ B  →  M , w ⊨ A ∧ B
+and_intro{M} {w} {A} {B} H H1 = H , H1
+
+and_elim1 : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  M , w ⊨ A ∧ B →  M , w ⊨ A  
+and_elim1 {M} {w} {A} {B} (a , b) = a
+
+and_elim2 : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  M , w ⊨ A ∧ B →  M , w ⊨ B  
+and_elim2 {M} {w} {A} {B} (a , b) =  b
+
+or_elim : ∀ {M : Model} {w : 𝐖 M} {A B C : Prop M} →  M , w ⊨ A ⇒ C  →  M , w ⊨ B ⇒ C →  M , w ⊨ A ∨ B ⇒ C
+or_elim {M} {w} {A} {B} {C} H H1 H2 = ⊎-elim case1 case2 H2 where
+
+ case1 = λ Hypo → H Hypo
+ case2 = λ Hypo → H1 Hypo
+
+or_intro1 : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  M , w ⊨ A  →  M , w ⊨ A ∨ B
+or_intro1{M} {w} {A} {B} H = inj₁ H
+
+or_intro2 : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  M , w ⊨ B  →  M , w ⊨ A ∨ B
+or_intro2{M} {w} {A} {B} H = inj₂ H
+
+neg_intro : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  M , w ⊨ A  →  M , w ⊨ B →  M , w ⊨ ~ B →  M , w ⊨ ~ A
+neg_intro {M} {w} {A} {B} H H1 H2 H3 = H2 H1
+
+neg_elim : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  M , w ⊨ A  →  M , w ⊨ ~ A  →  M , w ⊨ B
+neg_elim {M} {w} {A} {B} H H1 = ⊥-elim (H1 H)
+
+box_intro :  ∀ {M : Model} {w : 𝐖 M} {A : Prop M} →  (∀ w' → 𝐑 M w w' → M , w' ⊨ A)  →  M , w ⊨ □ A
+box_intro {M} {w} {A} H w' H1 = H w' H1
+
+box_elim : ∀ {M : Model} {w w' : 𝐖 M} {A : Prop M} →  M , w ⊨ □ A  → 𝐑 M w w' →  M , w' ⊨ A
+box_elim {M} {w}{w'} {A} H H1 = H w' H1
+
+diamond_intro : ∀ {M : Model} {w w' : 𝐖 M} {A : Prop M} → 𝐑 M w w' → M , w' ⊨ A → M , w ⊨ ◇ A
+diamond_intro {M} {w}{w'} {P} H H1 = w' , H , H1
+
+diamond_elim : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} → M , w ⊨ ◇ A → (∀ w' → M , w' ⊨ A →  M , w ⊨ B) → M , w ⊨ B
+diamond_elim {M} {w} {A} {B} (w' , Rww' , H1) H2 =  H2 w' H1
+
+>_intro : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  (∀ w' → 𝐅 M (val A) w w' → M , w' ⊨ B)  →  M , w ⊨ A > B
+>_intro {M} {w} {A} H w' H1 = H w' H1
+
+>_elim : ∀ {M : Model} {w w' : 𝐖 M} {A B : Prop M} →  M , w ⊨ A > B  → 𝐅 M (val A) w w' →  M , w' ⊨ B
+>_elim {M} {w}{w'} {A} H H1 = H w' H1
+
+all_intro : ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} → (∀ d → M , w ⊨ P d)  →  M , w ⊨ ∀ᵐ[ P ]
+all_intro {M}{w}{P} H d = H d
+
+all_elim :  ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} (d :  𝐃 M) →  M , w ⊨ ∀ᵐ[ P ] → M , w ⊨ P d
+all_elim = λ d H → H d
+
+ex_intro :  ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} (d :  𝐃 M) →  M , w ⊨ P d → M , w ⊨ ∃ᵐ[ P ]
+ex_intro {M} {w} {P} d H =  d , H
+
+ex_elim : ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} {C : Prop M} → M , w ⊨ ∃ᵐ[ P ] → (∀ d → M , w ⊨ P d →  M , w ⊨ C) → M , w ⊨ C
+ex_elim (d , Pd) H1 = H1 d Pd
+
