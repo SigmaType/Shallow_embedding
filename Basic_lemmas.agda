@@ -167,11 +167,11 @@ box_intro {M} {w} {A} H w' H1 = H w' H1
 box_elim : ∀ {M : Model} {w w' : 𝐖 M} {A : Prop M} →  M , w ⊨ □ A  → 𝐑 M w w' →  M , w' ⊨ A
 box_elim {M} {w}{w'} {A} H H1 = H w' H1
 
-diamond_intro : ∀ {M : Model} {w w' : 𝐖 M} {A : Prop M} → 𝐑 M w w' → M , w' ⊨ A → M , w ⊨ ◇ A
-diamond_intro {M} {w}{w'} {P} H H1 = w' , H , H1
+diam_intro : ∀ {M : Model} {w w' : 𝐖 M} {A : Prop M} → 𝐑 M w w' → M , w' ⊨ A → M , w ⊨ ◇ A
+diam_intro {M} {w}{w'} {P} H H1 = w' , H , H1
 
-diamond_elim : ∀ {M : Model} {w w' : 𝐖 M} {A B : Prop M} → M , w ⊨ ◇ A → (∀ g → 𝐑 M w g → M , g ⊨ A → M , w' ⊨ B) → M , w' ⊨ B
-diamond_elim {M} {w}{w'} {A} {B} (w0 , Rww0 , H1) H2 =  H2 w0 Rww0 H1
+diam_elim : ∀ {M : Model} {w w' : 𝐖 M} {A B : Prop M} → M , w ⊨ ◇ A → (∀ g → 𝐑 M w g → M , g ⊨ A → M , w' ⊨ B) → M , w' ⊨ B
+diam_elim {M} {w}{w'} {A} {B} (w0 , Rww0 , H1) H2 =  H2 w0 Rww0 H1
 
 >_intro : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  (∀ w' → 𝐅 M (val A) w w' → M , w' ⊨ B)  →  M , w ⊨ A > B
 >_intro {M} {w} {A} H w' H1 = H w' H1
@@ -191,6 +191,13 @@ ex_intro {M} {w} {P} d H =  d , H
 ex_elim : ∀ {M : Model} {w w' : 𝐖 M} {P : 𝐃 M → Prop M} {C : Prop M} → M , w ⊨ ∃ᵐ[ P ] → (∀ d → M , w ⊨ P d →  M , w' ⊨ C) → M , w' ⊨ C
 ex_elim (d , Pd) H1 = H1 d Pd
 
+app_elim : ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} {a : 𝐖 M → 𝐃 M} → M , w ⊨ P ∙ a → M , w ⊨ P (a w)
+app_elim x = x
+
+app_intro : ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} {a : 𝐖 M → 𝐃 M} → M , w ⊨ P (a w) → M , w ⊨ P ∙ a
+app_intro x = x
+
+
 
 Barcan_rev : ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} → (M , w ⊨ □ ∀ᵐ[ P ]) → (M , w ⊨ ∀ᵐ[ (λ d → □ (P d)) ]) 
 Barcan_rev {M} {w} {P} H d w' Rww' = Goal where
@@ -202,3 +209,50 @@ Barcan_rev {M} {w} {P} H d w' Rww' = Goal where
  L2 = all_elim {P = P} d L1
 
  Goal = L2
+
+{- Фиттинг и Мендельсон, с 311., упр 14.2.1 -}
+diam_lam_two : ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} {a : 𝐖 M → 𝐃 M} → M , w ⊨ ∀ᵐ[(λ d → ◇ (P d))] → M , w ⊨ ◇ (P (a w))
+diam_lam_two {M} {w} {P} {a} H = H (a w)
+
+diam_lam_one : ¬ ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} {a : 𝐖 M → 𝐃 M} → M , w ⊨ ◇ (P ∙ a) → M , w ⊨ ◇ (P (a w))
+
+diam_lam_one H = Proof where
+
+ R_Countermodel : Worlds-2 → Worlds-2 → Set₀
+ R_Countermodel world-one world-two = ⊤
+ R_Countermodel _ _ = ⊥
+
+ Countermodel : Model
+ Countermodel = record
+    { 𝐖 = Worlds-2
+    ; witness-w = world-one
+    ; 𝐃 = Worlds-2
+    ; witness-d = world-two
+    ; 𝐑 = R_Countermodel
+    ; 𝐅 = λ _ _ _ → ⊥
+    }
+
+ a : Worlds-2 → Worlds-2
+ a w = w
+
+ P : Worlds-2 → Prop Countermodel
+ P world-one = record {val = λ _  → ⊥}
+ P world-two = record {val = λ _  → ⊤ }
+
+ Antecedent :  Countermodel , world-one ⊨ ◇ (P ∙ a)
+ Antecedent = world-two , (tt , tt)
+
+ Consequent :  Countermodel , world-one ⊨ ~ ◇ P (a world-one)
+ Consequent (w' , R , Pa) =  Pa
+
+ Proof = Consequent (H {Countermodel} {world-one} {P} {a} Antecedent)
+
+
+{- Теперь пробуем логику более высокого порядка. Высшепорядковые модальные кванторы можно определить,
+но в предикативной Agda это весьма большая работа. Зато все еще можно использовать дефолтные Пи- и Сигма-типы
+для формулировки теорем высшего порядка. Что сейчас и сделаем -}
+
+HOL_test : ∀ {M : Model} {w : 𝐖 M} → Σ (𝐃 M → Prop M) (λ P → Σ (𝐃 M) (λ d → M , w ⊨ P d))
+HOL_test {M} {w} = (λ d → (d =ᵐ witness-d M)) , ( witness-d M) , refl
+
+

@@ -100,6 +100,7 @@ _⇔_ : ∀ {M : Model} → Prop M → Prop M → Prop M
 _⇔_ {M} A B =
   (A ⇒ B) ∧ (B ⇒ A)
 
+{- Красивые первопорядковые модальные кванторы -}
 
 ∀ᵐ[_] : ∀ {M : Model} → (𝐃 M → Prop M) → Prop M
 ∀ᵐ[ P ] =
@@ -119,6 +120,11 @@ _⇔_ {M} A B =
     }
 
 
+_∙_ : ∀ {M : Model} (P : 𝐃 M → Prop M) → (a : 𝐖 M → 𝐃 M) → Prop M
+P ∙ a = record { val = λ w → val (P (a w)) w }
+
+{- Помогает заменить лямбда-абстракцию Фиттинга и Мендельсона и выразить суждения об именах de dicto -}
+
 _>_ : ∀ {M : Model} → Prop M → Prop M → Prop M
 _>_ {M} A B =
   record
@@ -128,7 +134,11 @@ _>_ {M} A B =
         M , w' ⊨ B
     }
 
+_=ᵐ_ : ∀ {M : Model} → 𝐃 M → 𝐃 M → Prop M
+A =ᵐ B = record {val = λ w → A ≡ B}
 
+infixr 60 _=ᵐ_
+infixr 100 _∙_
 infixr 100 ~_
 infixr 100 □_
 infixr 100 ◇_
