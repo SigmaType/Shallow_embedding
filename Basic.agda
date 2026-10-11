@@ -18,12 +18,12 @@ open Model
 
 record Prop (M : Model) : Set₁ where
   field
-    val : 𝐖 M → Set₀
+    val : W M → Set₀
     
 open Prop public
 
 
-_,_⊨_ : ∀ (M : Model) → 𝐖 M → Prop M → Set₀
+_,_⊨_ : ∀ (M : Model) → W M → Prop M → Set₀
 M , w ⊨ F = val F w
 
 infixr 10 _,_⊨_
@@ -32,7 +32,7 @@ infixr 10 _,_⊨_
 {-
 
 Valid : ∀ (M : Model) → Prop M → Set₀
-Valid M A = ∀ (w : 𝐖 M) → M , w ⊨ A
+Valid M A = ∀ (w : W M) → M , w ⊨ A
 
 ⊨_ : (∀ (M : Model) → Prop M) → Set₁            Мне кажется, что эти определения излишние для нашего shallow embedding.
 ⊨ A = ∀ (M' : Model) → Valid M' (A M')        Так что можно пока их считать просто упражнением на формализацию  
@@ -47,7 +47,7 @@ infixr 9  ⊨_
   record
     { val = λ w →
         ∀ w' →
-        𝐑 M w w' →
+        R M w w' →
         M , w' ⊨ F
     }
 
@@ -56,8 +56,8 @@ infixr 9  ⊨_
 ◇_ {M} F =
   record
     { val = λ w →
-        Σ (𝐖 M) λ w' →
-        𝐑 M w w' × M , w' ⊨ F
+        Σ (W M) λ w' →
+        R M w w' × M , w' ⊨ F
     }
 
 
@@ -102,7 +102,7 @@ _⇔_ {M} A B =
 
 {- Красивые первопорядковые модальные кванторы -}
 
-∀ᵐ[_] : ∀ {M : Model} → (𝐃 M → Prop M) → Prop M
+∀ᵐ[_] : ∀ {M : Model} → (D M → Prop M) → Prop M
 ∀ᵐ[ P ] =
   record
     { val = λ w →
@@ -111,7 +111,7 @@ _⇔_ {M} A B =
     }
 
 
-∃ᵐ[_] : ∀ {M : Model} → (𝐃 M → Prop M) → Prop M
+∃ᵐ[_] : ∀ {M : Model} → (D M → Prop M) → Prop M
 ∃ᵐ[ P ] =
   record
     { val = λ w →
@@ -120,7 +120,7 @@ _⇔_ {M} A B =
     }
 
 
-_∙_ : ∀ {M : Model} (P : 𝐃 M → Prop M) → (a : 𝐖 M → 𝐃 M) → Prop M
+_∙_ : ∀ {M : Model} (P : D M → Prop M) → (a : W M → D M) → Prop M
 P ∙ a = record { val = λ w → val (P (a w)) w }
 
 {- Помогает заменить лямбда-абстракцию Фиттинга и Мендельсона и выразить суждения об именах de dicto -}
@@ -130,11 +130,11 @@ _>_ {M} A B =
   record
     { val = λ w →
         ∀ w' →
-        𝐅 M (val A) w w' →
+        F M (val A) w w' →
         M , w' ⊨ B
     }
 
-_=ᵐ_ : ∀ {M : Model} → 𝐃 M → 𝐃 M → Prop M
+_=ᵐ_ : ∀ {M : Model} → D M → D M → Prop M
 A =ᵐ B = record {val = λ w → A ≡ B}
 
 infixr 60 _=ᵐ_
@@ -151,26 +151,26 @@ infixr 100 ∀ᵐ[_]
 infixr 100 ∃ᵐ[_]
 
 Reflexive : ∀ (M : Model) → Set₀
-Reflexive (M) = ∀ w → 𝐑 M w w
+Reflexive (M) = ∀ w → R M w w
 
 
 Symmetric : ∀ (M : Model) → Set₀
-Symmetric (M) = ∀ {w w'} → 𝐑 M w w' → 𝐑 M w' w
+Symmetric (M) = ∀ {w w'} → R M w w' → R M w' w
 
 
 Transitive : ∀ (M : Model) → Set₀
-Transitive (M) = ∀ {w w' w''} → 𝐑 M w w' → 𝐑 M w' w'' → 𝐑 M w w''
+Transitive (M) = ∀ {w w' w''} → R M w w' → R M w' w'' → R M w w''
 
 
 Serial : ∀ (M : Model) → Set₀
-Serial (M) = ∀ w → Σ (𝐖 M) λ w' → 𝐑 M w w'
+Serial (M) = ∀ w → Σ (W M) λ w' → R M w w'
 
 
 Euclidean : ∀ (M : Model) → Set₀
-Euclidean (M) = ∀ {w v u} → 𝐑 M w v → 𝐑 M w u → 𝐑 M v u
+Euclidean (M) = ∀ {w v u} → R M w v → R M w u → R M v u
 
 Universal : ∀ (M : Model) → Set₀
-Universal M = ∀ w w' → 𝐑 M w w'
+Universal M = ∀ w w' → R M w w'
 
 data Worlds-1 : Set₀ where
  world-one : Worlds-1

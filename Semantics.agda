@@ -4,14 +4,14 @@ module Semantics where
 
 record Model : Set₁ where
   field
-    𝐖 : Set₀
-    witness-w : 𝐖
+    W : Set₀
+    witness-w : W
 
-    𝐃 : Set₀
-    witness-d : 𝐃
+    D : Set₀
+    witness-d : D
 
-    𝐑 : 𝐖 → 𝐖 → Set₀
-    𝐅 : (𝐖 → Set₀) → 𝐖 → 𝐖 → Set₀
+    R : W → W → Set₀
+    F : (W → Set₀) → W → W → Set₀
 
  {- Нашей базовой логикой будет являться минимальная экстенсиональная кондициональная логика
- с K-отношением достижимости для моадльных операторов -}
+ с K-отношением достижимости для модальных операторов -}

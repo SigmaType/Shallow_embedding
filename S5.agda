@@ -21,19 +21,19 @@ record S5_Model : Set₁ where
 
 open S5_Model
 
-𝐖-S5 : S5_Model → Set₀
-𝐖-S5 M = 𝐖 (Basic M)
+W-S5 : S5_Model → Set₀
+W-S5 M = W (Basic M)
 
-𝐃-S5 : S5_Model → Set₀
-𝐃-S5 M = 𝐃 (Basic M)
+D-S5 : S5_Model → Set₀
+D-S5 M = D (Basic M)
 
-𝐑-S5 : (M : S5_Model) → 𝐖-S5 M → 𝐖-S5 M → Set₀
-𝐑-S5 M = 𝐑 (Basic M)
+R-S5 : (M : S5_Model) → W-S5 M → W-S5 M → Set₀
+R-S5 M = R (Basic M)
 
-¬□impl◇ : ∀ (M : S5_Model) (w : 𝐖-S5 M) (P : Prop (Basic M)) → ((Basic M) , w ⊨ □ P) → ((Basic M) , w ⊨ ◇ P)
+¬□impl◇ : ∀ (M : S5_Model) (w : W-S5 M) (P : Prop (Basic M)) → ((Basic M) , w ⊨ □ P) → ((Basic M) , w ⊨ ◇ P)
 ¬□impl◇ M w P H = Goal where
 
- H-unfolded : ∀ w' → 𝐑-S5 M w w' → (Basic M) , w' ⊨ P
+ H-unfolded : ∀ w' → R-S5 M w w' → (Basic M) , w' ⊨ P
  H-unfolded = H
 
  Goal =  w , ( Universal_S5 M w w , H w (Universal_S5 M w w))

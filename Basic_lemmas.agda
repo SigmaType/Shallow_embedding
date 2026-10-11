@@ -15,44 +15,44 @@ open import Basic
 open Model
 
 
-K_axiom : ∀ (M : Model) (w : 𝐖 M) (A B : Prop M) → M , w ⊨ □ (A ⇒ B) →  M , w ⊨ □ A ⇒ □ B
+K_axiom : ∀ (M : Model) (w : W M) (A B : Prop M) → M , w ⊨ □ (A ⇒ B) →  M , w ⊨ □ A ⇒ □ B
 K_axiom M w A B H1 H2 = Goal where
 
- H1_unf : ∀ w' →  𝐑 M w w' → M , w' ⊨ A ⇒ B
+ H1_unf : ∀ w' →  R M w w' → M , w' ⊨ A ⇒ B
  H1_unf = H1
 
- H2_unf :  ∀ w' →  𝐑 M w w' → M , w' ⊨ A
+ H2_unf :  ∀ w' →  R M w w' → M , w' ⊨ A
  H2_unf = H2
 
- Goal : ∀ w' →  𝐑 M w w' → M , w' ⊨ B
+ Goal : ∀ w' →  R M w w' → M , w' ⊨ B
  Goal = λ w' RMww' → (H1_unf w' RMww') (H2_unf w' RMww')
 
 
 Nec : ∀ (M : Model) → (A : Prop M) → (∀ w → M , w ⊨ A) → (∀ w → M , w ⊨ □ A)
 Nec M A H w = Goal where
 
- Goal :  ∀ w' →  𝐑 M w w' → M , w' ⊨ A
+ Goal :  ∀ w' →  R M w w' → M , w' ⊨ A
  Goal = λ w' RMww' → H w'
 
->_weakness_right : ∀ (M : Model) (w : 𝐖 M) (A B C : Prop M) → M , w ⊨ A > B → M , w ⊨ A > (B ∨ C)
+>_weakness_right : ∀ (M : Model) (w : W M) (A B C : Prop M) → M , w ⊨ A > B → M , w ⊨ A > (B ∨ C)
 >_weakness_right M w A B C H = Goal where
 
- H_unf : ∀ w' → 𝐅 M (val A) w w' → M , w' ⊨ B
+ H_unf : ∀ w' → F M (val A) w w' → M , w' ⊨ B
  H_unf = H
 
- Goal : ∀ w' → 𝐅 M (val A) w w' → M , w' ⊨ B ∨ C
+ Goal : ∀ w' → F M (val A) w w' → M , w' ⊨ B ∨ C
  Goal = λ w' F → inj₁ (H_unf w' F)
 
-¬□impl◇ : ¬ ∀ (M : Model) (w : 𝐖 M) (P : Prop M) → (M , w ⊨ □ P) → (M , w ⊨ ◇ P)
+¬□impl◇ : ¬ ∀ (M : Model) (w : W M) (P : Prop M) → (M , w ⊨ □ P) → (M , w ⊨ ◇ P)
 ¬□impl◇ H = Goal where
 
  Countermodel = record
-   {𝐖 = Worlds-1 ;
+   {W = Worlds-1 ;
     witness-w = world-one ;
-    𝐃 = Worlds-1 ;
+    D = Worlds-1 ;
     witness-d = world-one ;
-    𝐑 = λ _ _ → ⊥ ;
-    𝐅 = λ _ _ _ → ⊥}
+    R = λ _ _ → ⊥ ;
+    F = λ _ _ _ → ⊥}
 
  P : Prop Countermodel
  P = record {val = λ _ → ⊥}
@@ -70,7 +70,7 @@ Nec M A H w = Goal where
  Goal = Consequent (H Countermodel world-one P Antecedent)
 
 
-lemma-1 : ¬ ∀ (M : Model) (w : 𝐖 M) (A B C : Prop M) → (M , w ⊨ A > B) → (M , w ⊨ A ∧ B > C)
+lemma-1 : ¬ ∀ (M : Model) (w : W M) (A B C : Prop M) → (M , w ⊨ A > B) → (M , w ⊨ A ∧ B > C)
 lemma-1 H = Goal where
 
  F-countermodel : (Worlds-2 → Set₀) → Worlds-2 → Worlds-2 → Set₀
@@ -81,12 +81,12 @@ lemma-1 H = Goal where
  Countermodel : Model
  Countermodel =
    record
-     { 𝐖 = Worlds-2 ;
+     { W = Worlds-2 ;
        witness-w = world-one ;
-       𝐃 = Worlds-2 ;
+       D = Worlds-2 ;
        witness-d = world-two ;
-       𝐑 = λ _ _ → ⊥ ;
-       𝐅 = F-countermodel }
+       R = λ _ _ → ⊥ ;
+       F = F-countermodel }
 
  A : Prop Countermodel
  A = record {val = λ _ → ⊤}
@@ -117,7 +117,7 @@ lemma-1 H = Goal where
  Goal = Consequent (H Countermodel world-one A B C Antecedent)
 
 
-Barcan : ∀ (M : Model) (w : 𝐖 M) (P : 𝐃 M → Prop M) → (M , w ⊨ ∀ᵐ[ (λ d → □ (P d)) ]) → (M , w ⊨ □ ∀ᵐ[ P ])
+Barcan : ∀ (M : Model) (w : W M) (P : D M → Prop M) → (M , w ⊨ ∀ᵐ[ (λ d → □ (P d)) ]) → (M , w ⊨ □ ∀ᵐ[ P ])
 Barcan M w P H w' R d = Goal where
 
  H-unfolded :  ∀ d → M , w ⊨ □ (P d)
@@ -128,78 +128,78 @@ Barcan M w P H w' R d = Goal where
  {- Создадим инфраструктуру натуральной дедукции. Да, доказательства тривиальные. Зато теперь можно будет писать рассуждения более
  привычным образом-}
 
-imp_intro : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} → (M , w ⊨ A → M , w ⊨ B) →  M , w ⊨ A ⇒ B
+imp_intro : ∀ {M : Model} {w : W M} {A B : Prop M} → (M , w ⊨ A → M , w ⊨ B) →  M , w ⊨ A ⇒ B
 imp_intro {M} {w} {A} {B} H H1 = H H1
 
-imp_elim : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  M , w ⊨ A ⇒ B →  M , w ⊨ A  →  M , w ⊨ B
+imp_elim : ∀ {M : Model} {w : W M} {A B : Prop M} →  M , w ⊨ A ⇒ B →  M , w ⊨ A  →  M , w ⊨ B
 imp_elim{M} {w} {A} {B} H H1 = H H1
 
-and_intro :  ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  M , w ⊨ A  →  M , w ⊨ B  →  M , w ⊨ A ∧ B
+and_intro :  ∀ {M : Model} {w : W M} {A B : Prop M} →  M , w ⊨ A  →  M , w ⊨ B  →  M , w ⊨ A ∧ B
 and_intro{M} {w} {A} {B} H H1 = H , H1
 
-and_elim1 : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  M , w ⊨ A ∧ B →  M , w ⊨ A  
+and_elim1 : ∀ {M : Model} {w : W M} {A B : Prop M} →  M , w ⊨ A ∧ B →  M , w ⊨ A  
 and_elim1 {M} {w} {A} {B} (a , b) = a
 
-and_elim2 : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  M , w ⊨ A ∧ B →  M , w ⊨ B  
+and_elim2 : ∀ {M : Model} {w : W M} {A B : Prop M} →  M , w ⊨ A ∧ B →  M , w ⊨ B  
 and_elim2 {M} {w} {A} {B} (a , b) =  b
 
-or_elim : ∀ {M : Model} {w : 𝐖 M} {A B C : Prop M} →  M , w ⊨ A ⇒ C  →  M , w ⊨ B ⇒ C →  M , w ⊨ A ∨ B ⇒ C
+or_elim : ∀ {M : Model} {w : W M} {A B C : Prop M} →  M , w ⊨ A ⇒ C  →  M , w ⊨ B ⇒ C →  M , w ⊨ A ∨ B ⇒ C
 or_elim {M} {w} {A} {B} {C} H H1 H2 = ⊎-elim case1 case2 H2 where
 
  case1 = λ Hypo → H Hypo
  case2 = λ Hypo → H1 Hypo
 
-or_intro1 : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  M , w ⊨ A  →  M , w ⊨ A ∨ B
+or_intro1 : ∀ {M : Model} {w : W M} {A B : Prop M} →  M , w ⊨ A  →  M , w ⊨ A ∨ B
 or_intro1{M} {w} {A} {B} H = inj₁ H
 
-or_intro2 : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  M , w ⊨ B  →  M , w ⊨ A ∨ B
+or_intro2 : ∀ {M : Model} {w : W M} {A B : Prop M} →  M , w ⊨ B  →  M , w ⊨ A ∨ B
 or_intro2{M} {w} {A} {B} H = inj₂ H
 
-neg_intro : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  M , w ⊨ A  →  M , w ⊨ B →  M , w ⊨ ~ B →  M , w ⊨ ~ A
+neg_intro : ∀ {M : Model} {w : W M} {A B : Prop M} →  M , w ⊨ A  →  M , w ⊨ B →  M , w ⊨ ~ B →  M , w ⊨ ~ A
 neg_intro {M} {w} {A} {B} H H1 H2 H3 = H2 H1
 
-neg_elim : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  M , w ⊨ A  →  M , w ⊨ ~ A  →  M , w ⊨ B
+neg_elim : ∀ {M : Model} {w : W M} {A B : Prop M} →  M , w ⊨ A  →  M , w ⊨ ~ A  →  M , w ⊨ B
 neg_elim {M} {w} {A} {B} H H1 = ⊥-elim (H1 H)
 
-box_intro :  ∀ {M : Model} {w : 𝐖 M} {A : Prop M} →  (∀ w' → 𝐑 M w w' → M , w' ⊨ A)  →  M , w ⊨ □ A
+box_intro :  ∀ {M : Model} {w : W M} {A : Prop M} →  (∀ w' → R M w w' → M , w' ⊨ A)  →  M , w ⊨ □ A
 box_intro {M} {w} {A} H w' H1 = H w' H1
 
-box_elim : ∀ {M : Model} {w w' : 𝐖 M} {A : Prop M} →  M , w ⊨ □ A  → 𝐑 M w w' →  M , w' ⊨ A
+box_elim : ∀ {M : Model} {w w' : W M} {A : Prop M} →  M , w ⊨ □ A  → R M w w' →  M , w' ⊨ A
 box_elim {M} {w}{w'} {A} H H1 = H w' H1
 
-diam_intro : ∀ {M : Model} {w w' : 𝐖 M} {A : Prop M} → 𝐑 M w w' → M , w' ⊨ A → M , w ⊨ ◇ A
+diam_intro : ∀ {M : Model} {w w' : W M} {A : Prop M} → R M w w' → M , w' ⊨ A → M , w ⊨ ◇ A
 diam_intro {M} {w}{w'} {P} H H1 = w' , H , H1
 
-diam_elim : ∀ {M : Model} {w w' : 𝐖 M} {A B : Prop M} → M , w ⊨ ◇ A → (∀ g → 𝐑 M w g → M , g ⊨ A → M , w' ⊨ B) → M , w' ⊨ B
+diam_elim : ∀ {M : Model} {w w' : W M} {A B : Prop M} → M , w ⊨ ◇ A → (∀ g → R M w g → M , g ⊨ A → M , w' ⊨ B) → M , w' ⊨ B
 diam_elim {M} {w}{w'} {A} {B} (w0 , Rww0 , H1) H2 =  H2 w0 Rww0 H1
 
->_intro : ∀ {M : Model} {w : 𝐖 M} {A B : Prop M} →  (∀ w' → 𝐅 M (val A) w w' → M , w' ⊨ B)  →  M , w ⊨ A > B
+>_intro : ∀ {M : Model} {w : W M} {A B : Prop M} →  (∀ w' → F M (val A) w w' → M , w' ⊨ B)  →  M , w ⊨ A > B
 >_intro {M} {w} {A} H w' H1 = H w' H1
 
->_elim : ∀ {M : Model} {w w' : 𝐖 M} {A B : Prop M} →  M , w ⊨ A > B  → 𝐅 M (val A) w w' →  M , w' ⊨ B
+>_elim : ∀ {M : Model} {w w' : W M} {A B : Prop M} →  M , w ⊨ A > B  → F M (val A) w w' →  M , w' ⊨ B
 >_elim {M} {w}{w'} {A} H H1 = H w' H1
 
-all_intro : ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} → (∀ d → M , w ⊨ P d)  →  M , w ⊨ ∀ᵐ[ P ]
+all_intro : ∀ {M : Model} {w : W M} {P : D M → Prop M} → (∀ d → M , w ⊨ P d)  →  M , w ⊨ ∀ᵐ[ P ]
 all_intro {M}{w}{P} H d = H d
 
-all_elim :  ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} (d :  𝐃 M) →  M , w ⊨ ∀ᵐ[ P ] → M , w ⊨ P d
+all_elim :  ∀ {M : Model} {w : W M} {P : D M → Prop M} (d :  D M) →  M , w ⊨ ∀ᵐ[ P ] → M , w ⊨ P d
 all_elim = λ d H → H d
 
-ex_intro :  ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} (d :  𝐃 M) →  M , w ⊨ P d → M , w ⊨ ∃ᵐ[ P ]
+ex_intro :  ∀ {M : Model} {w : W M} {P : D M → Prop M} (d :  D M) →  M , w ⊨ P d → M , w ⊨ ∃ᵐ[ P ]
 ex_intro {M} {w} {P} d H =  d , H
 
-ex_elim : ∀ {M : Model} {w w' : 𝐖 M} {P : 𝐃 M → Prop M} {C : Prop M} → M , w ⊨ ∃ᵐ[ P ] → (∀ d → M , w ⊨ P d →  M , w' ⊨ C) → M , w' ⊨ C
+ex_elim : ∀ {M : Model} {w w' : W M} {P : D M → Prop M} {C : Prop M} → M , w ⊨ ∃ᵐ[ P ] → (∀ d → M , w ⊨ P d →  M , w' ⊨ C) → M , w' ⊨ C
 ex_elim (d , Pd) H1 = H1 d Pd
 
-app_elim : ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} {a : 𝐖 M → 𝐃 M} → M , w ⊨ P ∙ a → M , w ⊨ P (a w)
+app_elim : ∀ {M : Model} {w : W M} {P : D M → Prop M} {a : W M → D M} → M , w ⊨ P ∙ a → M , w ⊨ P (a w)
 app_elim x = x
 
-app_intro : ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} {a : 𝐖 M → 𝐃 M} → M , w ⊨ P (a w) → M , w ⊨ P ∙ a
+app_intro : ∀ {M : Model} {w : W M} {P : D M → Prop M} {a : W M → D M} → M , w ⊨ P (a w) → M , w ⊨ P ∙ a
 app_intro x = x
 
 
 
-Barcan_rev : ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} → (M , w ⊨ □ ∀ᵐ[ P ]) → (M , w ⊨ ∀ᵐ[ (λ d → □ (P d)) ]) 
+Barcan_rev : ∀ {M : Model} {w : W M} {P : D M → Prop M} → (M , w ⊨ □ ∀ᵐ[ P ]) → (M , w ⊨ ∀ᵐ[ (λ d → □ (P d)) ]) 
 Barcan_rev {M} {w} {P} H d w' Rww' = Goal where
 
  L1 : M , w' ⊨  ∀ᵐ[ P ]
@@ -211,10 +211,10 @@ Barcan_rev {M} {w} {P} H d w' Rww' = Goal where
  Goal = L2
 
 {- Фиттинг и Мендельсон, с 311., упр 14.2.1 -}
-diam_lam_two : ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} {a : 𝐖 M → 𝐃 M} → M , w ⊨ ∀ᵐ[(λ d → ◇ (P d))] → M , w ⊨ ◇ (P (a w))
+diam_lam_two : ∀ {M : Model} {w : W M} {P : D M → Prop M} {a : W M → D M} → M , w ⊨ ∀ᵐ[(λ d → ◇ (P d))] → M , w ⊨ ◇ (P (a w))
 diam_lam_two {M} {w} {P} {a} H = H (a w)
 
-diam_lam_one : ¬ ∀ {M : Model} {w : 𝐖 M} {P : 𝐃 M → Prop M} {a : 𝐖 M → 𝐃 M} → M , w ⊨ ◇ (P ∙ a) → M , w ⊨ ◇ (P (a w))
+diam_lam_one : ¬ ∀ {M : Model} {w : W M} {P : D M → Prop M} {a : W M → D M} → M , w ⊨ ◇ (P ∙ a) → M , w ⊨ ◇ (P (a w))
 
 diam_lam_one H = Proof where
 
@@ -224,12 +224,12 @@ diam_lam_one H = Proof where
 
  Countermodel : Model
  Countermodel = record
-    { 𝐖 = Worlds-2
+    { W = Worlds-2
     ; witness-w = world-one
-    ; 𝐃 = Worlds-2
+    ; D = Worlds-2
     ; witness-d = world-two
-    ; 𝐑 = R_Countermodel
-    ; 𝐅 = λ _ _ _ → ⊥
+    ; R = R_Countermodel
+    ; F = λ _ _ _ → ⊥
     }
 
  a : Worlds-2 → Worlds-2
@@ -252,7 +252,7 @@ diam_lam_one H = Proof where
 но в предикативной Agda это весьма большая работа. Зато все еще можно использовать дефолтные Пи- и Сигма-типы
 для формулировки теорем высшего порядка. Что сейчас и сделаем -}
 
-HOL_test : ∀ {M : Model} {w : 𝐖 M} → Σ (𝐃 M → Prop M) (λ P → Σ (𝐃 M) (λ d → M , w ⊨ P d))
+HOL_test : ∀ {M : Model} {w : W M} → Σ (D M → Prop M) (λ P → Σ (D M) (λ d → M , w ⊨ P d))
 HOL_test {M} {w} = (λ d → (d =ᵐ witness-d M)) , ( witness-d M) , refl
 
 
