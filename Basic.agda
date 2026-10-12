@@ -184,6 +184,50 @@ data Worlds-3 : Set₀ where
  world-two : Worlds-3
  world-three : Worlds-3
 
+-- База классической логики для LEM
+LEM : Set₁
+LEM = ∀ (A : Set) → (A ⊎ ¬ A)
 
+DNE : Set₁
+DNE = ∀ (A : Set) → ¬ ¬ A → A
 
+dbl-neg-elim : LEM → DNE
+dbl-neg-elim = λ (lem : LEM) (A : Set) (nna : ¬ ¬ A) →
+  ⊎-elim
+  (λ (a : A) →
+    a)
+  (λ (na : ¬ A) →
+    ⊥-elim (nna na))
+  (lem A)
+
+nEx_fall_not : {A : Set} → (P : A → Set) → ¬ Σ A P → ∀ (x : A) → ¬ (P x)
+nEx_fall_not {A} = λ (P : A → Set) (nEx : ¬ Σ A P) →
+  λ (x : A) (Px : P x) → nEx (x , Px)
+
+not_fall_exists : {A : Set} → {P : A → Set} → A → (lem : LEM) → (¬ ∀ (x : A) → P x) → Σ A (λ x → ¬ P x)
+
+not_fall_exists {A} {P} = λ (a : A) (lem : LEM) (f : ¬ ∀ (x : A) → P x) →
+  let
+    disj : (P a) ⊎ ¬ (P a)
+    disj = lem (P a)
+    dne : DNE
+    dne = dbl-neg-elim lem
+    disj1 : (Σ A (λ x → ¬ P x)) ⊎ (¬ Σ A (λ x → ¬ P x))
+    disj1 = lem (Σ A (λ x → ¬ P x))
+  in
+    ⊎-elim
+    (λ (Pa : P a) →
+      ⊎-elim
+      (λ (goal : Σ A (λ x → ¬ P x)) →
+        goal)
+      (λ (ngoal : ¬ Σ A (λ x → ¬ P x)) →
+        let
+          not_fa = nEx_fall_not (λ x → ¬ P x) ngoal
+        in
+          {!!})
+      disj1
+      )
+    (λ (nPa : ¬ P a) →
+        a , nPa)
+    disj
 

@@ -137,7 +137,7 @@ imp_elim{M} {w} {A} {B} H H1 = H H1
 and_intro :  ∀ {M : Model} {w : W M} {A B : Prop M} →  M , w ⊨ A  →  M , w ⊨ B  →  M , w ⊨ A ∧ B
 and_intro{M} {w} {A} {B} H H1 = H , H1
 
-and_elim1 : ∀ {M : Model} {w : W M} {A B : Prop M} →  M , w ⊨ A ∧ B →  M , w ⊨ A  
+and_elim1 : ∀ {M : Model} {w : W M} {A B : Prop M} →  M , w ⊨ A ∧ B →  M , w ⊨ A
 and_elim1 {M} {w} {A} {B} (a , b) = a
 
 and_elim2 : ∀ {M : Model} {w : W M} {A B : Prop M} →  M , w ⊨ A ∧ B →  M , w ⊨ B  
@@ -166,6 +166,15 @@ box_intro {M} {w} {A} H w' H1 = H w' H1
 
 box_elim : ∀ {M : Model} {w w' : W M} {A : Prop M} →  M , w ⊨ □ A  → R M w w' →  M , w' ⊨ A
 box_elim {M} {w}{w'} {A} H H1 = H w' H1
+
+neg_box : ∀ {M : Model} {w : W M} {A : Prop M} → (lem : LEM) →  M , w ⊨ ~ □ A  → M , w ⊨ ◇ ~ A
+neg_box {M} {w} {A} lem H =
+  let
+    H_unfolded : ¬ (∀ w' → R M w w' → M , w' ⊨ A)
+    H_unfolded = H
+  in
+    {!!}
+
 
 diam_intro : ∀ {M : Model} {w w' : W M} {A : Prop M} → R M w w' → M , w' ⊨ A → M , w ⊨ ◇ A
 diam_intro {M} {w}{w'} {P} H H1 = w' , H , H1
@@ -256,3 +265,43 @@ HOL_test : ∀ {M : Model} {w : W M} → Σ (D M → Prop M) (λ P → Σ (D M) 
 HOL_test {M} {w} = (λ d → (d =ᵐ witness-d M)) , ( witness-d M) , refl
 
 
+-- Barcan : ∀ (M : Model) (w : W M) (P : D M → Prop M) → (M , w ⊨ ∀ᵐ[ (λ d → □ (P d)) ]) → (M , w ⊨ □ ∀ᵐ[ P ])
+-- Barcan M w P H w' R d = Goal where
+
+-- w - действительный мир
+my-theorem : ∀ (M : Model) (w : W M) (Math : D M → Prop M) (Poet : D M → Prop M)
+  (A : D M → Prop M) (P : D M → Prop M) (U : Universal M) →
+  (Alice : D M) →
+  -- любой поет является необходимо поэтичным и не необходимо аналитичным
+  (M , w ⊨ ∀ᵐ[ (λ d → (□ (Poet d ⇒ P d)) ∧ (~ □ (Poet d ⇒ A d)))]) →
+  -- любой математик является необходимо аналитичным и не необходимо поэтичным
+  (M , w ⊨ ∀ᵐ[ (λ d → (□ (Math d ⇒ A d)) ∧ (~ □ (Math d ⇒ P d)))]) →
+  (M , w ⊨ Math Alice ∧ Poet Alice) →
+  ⊥
+
+my-theorem = λ M w Math Poet A P U Alice Poet_prop Math_prop Alice_M_P →
+  let
+    MA : (M , w ⊨ Math Alice)
+    MA = and_elim1 {A = Math Alice} {B = Poet Alice} Alice_M_P
+    PA : (M , w ⊨ Poet Alice)
+    PA = and_elim2 {A = Math Alice} {B = Poet Alice} Alice_M_P
+    Alice_math : M , w ⊨ (□ (Math Alice ⇒ A Alice) ∧ ~ □ (Math Alice ⇒ P Alice))
+    Alice_math = all_elim {P = (λ d → □ (Math d ⇒ A d) ∧ ~ □ (Math d ⇒ P d))} Alice Math_prop
+    Alice_mathematical : M , w ⊨ □ (Math Alice ⇒ A Alice)
+    Alice_mathematical = and_elim1 {A = □ (Math Alice ⇒ A Alice)} {B = ~ □ (Math Alice ⇒ P Alice)} Alice_math
+    Alice_m_not_poetical : M , w ⊨ ~ □ (Math Alice ⇒ P Alice)
+    Alice_m_not_poetical = and_elim2 {A = □ (Math Alice ⇒ A Alice)} {B = ~ □ (Math Alice ⇒ P Alice)} Alice_math
+    Alice_poet : M , w ⊨ (□ (Poet Alice ⇒ P Alice) ∧ ~ □ (Poet Alice ⇒ A Alice))
+    Alice_poet = all_elim {P = (λ d → □ (Poet d ⇒ P d) ∧ ~ □ (Poet d ⇒ A d))} Alice Poet_prop
+    Alice_poetical : M , w ⊨ (□ (Poet Alice ⇒ P Alice))
+    Alice_poetical = and_elim1 {A = □ (Poet Alice ⇒ P Alice)} {B = ~ □ (Poet Alice ⇒ A Alice)} Alice_poet
+    Alice_p_not_mathematical : M , w ⊨ ~ □ (Poet Alice ⇒ A Alice)
+    Alice_p_not_mathematical = and_elim2 {A = □ (Poet Alice ⇒ P Alice)} {B = ~ □ (Poet Alice ⇒ A Alice)} Alice_poet
+    Rww : R M w w
+    Rww = U w w
+    Alice_mathematical1 : M , w ⊨ Math Alice ⇒ A Alice
+    Alice_mathematical1 = box_elim {M = M} Alice_mathematical Rww
+--    Alice_m_not_poetical1 : M , w ⊨ Math Alice ⇒ P Alice
+--    Alice_m_not_poetical1 = box_elim {M = M} Alice_m_not_poetical Rww
+  in
+    {!!}
