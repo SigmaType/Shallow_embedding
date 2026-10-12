@@ -204,9 +204,13 @@ nEx_fall_not : {A : Set} → (P : A → Set) → ¬ Σ A P → ∀ (x : A) → �
 nEx_fall_not {A} = λ (P : A → Set) (nEx : ¬ Σ A P) →
   λ (x : A) (Px : P x) → nEx (x , Px)
 
+fall_DNE : {A : Set} → {P : A → Set} → DNE → (∀ (x : A) → ¬ ¬ (P x)) → (∀ (x : A) → P x)
+fall_DNE {A} {P} = λ (dne : DNE) (f : ∀ (x : A) → ¬ ¬ (P x)) →
+  λ (x : A) → dne (P x) (f x)
+
 not_fall_exists : {A : Set} → {P : A → Set} → A → (lem : LEM) → (¬ ∀ (x : A) → P x) → Σ A (λ x → ¬ P x)
 
-not_fall_exists {A} {P} = λ (a : A) (lem : LEM) (f : ¬ ∀ (x : A) → P x) →
+not_fall_exists {A} {P} = λ (a : A) (lem : LEM) (nfa_Px : ¬ ∀ (x : A) → P x) →
   let
     disj : (P a) ⊎ ¬ (P a)
     disj = lem (P a)
@@ -222,9 +226,12 @@ not_fall_exists {A} {P} = λ (a : A) (lem : LEM) (f : ¬ ∀ (x : A) → P x) �
         goal)
       (λ (ngoal : ¬ Σ A (λ x → ¬ P x)) →
         let
-          not_fa = nEx_fall_not (λ x → ¬ P x) ngoal
+          fa_nnPx : ∀ (x : A) → ¬ (¬ P x)
+          fa_nnPx = nEx_fall_not (λ x → ¬ P x) ngoal
+          fa_Px : (x : A) → P x
+          fa_Px = fall_DNE dne fa_nnPx
         in
-          {!!})
+          ⊥-elim (nfa_Px fa_Px))
       disj1
       )
     (λ (nPa : ¬ P a) →
