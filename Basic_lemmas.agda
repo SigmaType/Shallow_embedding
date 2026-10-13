@@ -12,38 +12,47 @@ open import Function.Base using (_$_)
 open import Data.Unit.Base using (⊤ ; tt)
 open import Semantics
 open import Basic
+open import Propositional using (LEM ; DNE ; not-fall-exists ; nimpl-conj)
 open Model
 
 
 K_axiom : ∀ (M : Model) (w : W M) (A B : Prop M) → M , w ⊨ □ (A ⇒ B) →  M , w ⊨ □ A ⇒ □ B
-K_axiom M w A B H1 H2 = Goal where
+K_axiom M w A B H1 boxA = Goal where
+  -- во всяком мире w', достижимом из w - unfold w' ⊨ □ (A ⇒ B)
+  H1_unf : ∀ w' →  R M w w' → M , w' ⊨ A ⇒ B
+  H1_unf = H1
 
- H1_unf : ∀ w' →  R M w w' → M , w' ⊨ A ⇒ B
- H1_unf = H1
+  -- во всяком мире w', достижимом из w - unfold для w' ⊨ □ A
+  boxA_unf :  ∀ w' →  R M w w' → M , w' ⊨ A
+  boxA_unf = boxA
 
- H2_unf :  ∀ w' →  R M w w' → M , w' ⊨ A
- H2_unf = H2
-
- Goal : ∀ w' →  R M w w' → M , w' ⊨ B
- Goal = λ w' RMww' → (H1_unf w' RMww') (H2_unf w' RMww')
+  -- во всяком мире w', достижимом из w - unfold для w' ⊨ □ B
+  Goal : ∀ w' →  R M w w' → M , w' ⊨ B
+  Goal = λ w' RMww' → (H1_unf w' RMww') (boxA_unf w' RMww')
 
 
 Nec : ∀ (M : Model) → (A : Prop M) → (∀ w → M , w ⊨ A) → (∀ w → M , w ⊨ □ A)
-Nec M A H w = Goal where
+Nec M A = λ (H : ∀ w → M , w ⊨ A) (w : W M) →
+  let
+    Goal :  ∀ w' →  R M w w' → M , w' ⊨ A
+    Goal = λ w' _ → H w'
+  in
+    Goal
 
- Goal :  ∀ w' →  R M w w' → M , w' ⊨ A
- Goal = λ w' RMww' → H w'
 
 >_weakness_right : ∀ (M : Model) (w : W M) (A B C : Prop M) → M , w ⊨ A > B → M , w ⊨ A > (B ∨ C)
->_weakness_right M w A B C H = Goal where
-
- H_unf : ∀ w' → F M (val A) w w' → M , w' ⊨ B
- H_unf = H
-
- Goal : ∀ w' → F M (val A) w w' → M , w' ⊨ B ∨ C
- Goal = λ w' F → inj₁ (H_unf w' F)
+>_weakness_right M w A B C = λ (H : M , w ⊨ A > B) →
+  let
+    -- M , w ⊨ A > B  --> ∀ w' → F M (val A) w w' → M , w' ⊨ B
+    H_unf : ∀ w' → F M (val A) w w' → M , w' ⊨ B
+    H_unf = H
+    Goal : ∀ w' → F M (val A) w w' → M , w' ⊨ B ∨ C
+    Goal = λ w' F → inj₁ (H_unf w' F)
+  in
+    Goal
 
 ¬□impl◇ : ¬ ∀ (M : Model) (w : W M) (P : Prop M) → (M , w ⊨ □ P) → (M , w ⊨ ◇ P)
+-- H : ∀ (M : Model) (w : W M) (P : Prop M) → (M , w ⊨ □ P) → (M , w ⊨ ◇ P)
 ¬□impl◇ H = Goal where
 
  Countermodel = record
@@ -58,7 +67,12 @@ Nec M A H w = Goal where
  P = record {val = λ _ → ⊥}
 
  Antecedent : Countermodel , world-one ⊨ □ P
- Antecedent world-one ()
+ Antecedent =
+   let
+     unf : ∀ (w' : W Countermodel) → R Countermodel world-one w' →  Countermodel , w' ⊨ P
+     unf = λ w' Rww' → ⊥-elim Rww'
+   in
+     unf
 
  Consequent : ¬ (Countermodel , world-one ⊨ ◇ P)
  Consequent (w' ,(Rww' , ⊨P)) =  Rww'
@@ -172,8 +186,12 @@ neg_box {M} {w} {A} lem H =
   let
     H_unfolded : ¬ (∀ w' → R M w w' → M , w' ⊨ A)
     H_unfolded = H
+    H_exists : Σ (M .W) (λ x → ¬ (R M w x → M , x ⊨ A))
+    H_exists = not-fall-exists lem H_unfolded
+    w' , P = H_exists
+    conj = nimpl-conj lem  P
   in
-    {!!}
+    w' , conj
 
 
 diam_intro : ∀ {M : Model} {w w' : W M} {A : Prop M} → R M w w' → M , w' ⊨ A → M , w ⊨ ◇ A
@@ -270,7 +288,7 @@ HOL_test {M} {w} = (λ d → (d =ᵐ witness-d M)) , ( witness-d M) , refl
 
 -- w - действительный мир
 my-theorem : ∀ (M : Model) (w : W M) (Math : D M → Prop M) (Poet : D M → Prop M)
-  (A : D M → Prop M) (P : D M → Prop M) (U : Universal M) →
+  (A : D M → Prop M) (P : D M → Prop M) (U : Universal M) → LEM →
   (Alice : D M) →
   -- любой поет является необходимо поэтичным и не необходимо аналитичным
   (M , w ⊨ ∀ᵐ[ (λ d → (□ (Poet d ⇒ P d)) ∧ (~ □ (Poet d ⇒ A d)))]) →
@@ -279,29 +297,53 @@ my-theorem : ∀ (M : Model) (w : W M) (Math : D M → Prop M) (Poet : D M → P
   (M , w ⊨ Math Alice ∧ Poet Alice) →
   ⊥
 
-my-theorem = λ M w Math Poet A P U Alice Poet_prop Math_prop Alice_M_P →
+my-theorem = λ M w Math Poet A P U (lem : LEM) Alice Poet_prop Math_prop
+  (Alice_M_P : M , w ⊨ Math Alice ∧ Poet Alice) →
   let
-    MA : (M , w ⊨ Math Alice)
-    MA = and_elim1 {A = Math Alice} {B = Poet Alice} Alice_M_P
-    PA : (M , w ⊨ Poet Alice)
-    PA = and_elim2 {A = Math Alice} {B = Poet Alice} Alice_M_P
+    -- устраняем кванторы всеобщности, подставляя Alice
     Alice_math : M , w ⊨ (□ (Math Alice ⇒ A Alice) ∧ ~ □ (Math Alice ⇒ P Alice))
     Alice_math = all_elim {P = (λ d → □ (Math d ⇒ A d) ∧ ~ □ (Math d ⇒ P d))} Alice Math_prop
-    Alice_mathematical : M , w ⊨ □ (Math Alice ⇒ A Alice)
-    Alice_mathematical = and_elim1 {A = □ (Math Alice ⇒ A Alice)} {B = ~ □ (Math Alice ⇒ P Alice)} Alice_math
-    Alice_m_not_poetical : M , w ⊨ ~ □ (Math Alice ⇒ P Alice)
-    Alice_m_not_poetical = and_elim2 {A = □ (Math Alice ⇒ A Alice)} {B = ~ □ (Math Alice ⇒ P Alice)} Alice_math
+
     Alice_poet : M , w ⊨ (□ (Poet Alice ⇒ P Alice) ∧ ~ □ (Poet Alice ⇒ A Alice))
     Alice_poet = all_elim {P = (λ d → □ (Poet d ⇒ P d) ∧ ~ □ (Poet d ⇒ A d))} Alice Poet_prop
-    Alice_poetical : M , w ⊨ (□ (Poet Alice ⇒ P Alice))
-    Alice_poetical = and_elim1 {A = □ (Poet Alice ⇒ P Alice)} {B = ~ □ (Poet Alice ⇒ A Alice)} Alice_poet
-    Alice_p_not_mathematical : M , w ⊨ ~ □ (Poet Alice ⇒ A Alice)
-    Alice_p_not_mathematical = and_elim2 {A = □ (Poet Alice ⇒ P Alice)} {B = ~ □ (Poet Alice ⇒ A Alice)} Alice_poet
+
+    -- Разбиение 1-й конъюнкции
+    boxMath_Analitical : M , w ⊨ □ (Math Alice ⇒ A Alice)
+    boxMath_Analitical = and_elim1 {A = □ (Math Alice ⇒ A Alice)} {B = ~ □ (Math Alice ⇒ P Alice)} Alice_math
+
+    nboxMath_Poetical : M , w ⊨ ~ □ (Math Alice ⇒ P Alice)
+    nboxMath_Poetical = and_elim2 {A = □ (Math Alice ⇒ A Alice)} {B = ~ □ (Math Alice ⇒ P Alice)} Alice_math
+
+    -- Разбиение 2-й конъюнкции
+    boxPoet_Poetical : M , w ⊨ (□ (Poet Alice ⇒ P Alice))
+    boxPoet_Poetical = and_elim1 {A = □ (Poet Alice ⇒ P Alice)} {B = ~ □ (Poet Alice ⇒ A Alice)} Alice_poet
+
+    nboxPoet_Analytical : M , w ⊨ ~ □ (Poet Alice ⇒ A Alice)
+    nboxPoet_Analytical = and_elim2 {A = □ (Poet Alice ⇒ P Alice)} {B = ~ □ (Poet Alice ⇒ A Alice)} Alice_poet
+
+    -- разбиение 3-й конъюнкции: Alice математик и поэт
+    MA : (M , w ⊨ Math Alice)
+    MA = and_elim1 {A = Math Alice} {B = Poet Alice} Alice_M_P
+
+    PA : (M , w ⊨ Poet Alice)
+    PA = and_elim2 {A = Math Alice} {B = Poet Alice} Alice_M_P
+
     Rww : R M w w
     Rww = U w w
-    Alice_mathematical1 : M , w ⊨ Math Alice ⇒ A Alice
-    Alice_mathematical1 = box_elim {M = M} Alice_mathematical Rww
---    Alice_m_not_poetical1 : M , w ⊨ Math Alice ⇒ P Alice
---    Alice_m_not_poetical1 = box_elim {M = M} Alice_m_not_poetical Rww
+    boxMath_Analitical1 : M , w ⊨ Math Alice ⇒ A Alice
+    boxMath_Analitical1 = box_elim {M = M} boxMath_Analitical Rww
+    nboxPoet_Analytical2 : M , w ⊨ ◇ ~ (Poet Alice ⇒ A Alice)
+-- neg_box : ∀ {M : Model} {w : W M} {A : Prop M} → (lem : LEM) →  M , w ⊨ ~ □ A  → M , w ⊨ ◇ ~ A    
+    nboxPoet_Analytical2 = neg_box {M = M} lem nboxPoet_Analytical
+    w' , Rww' , nPoet_A = nboxPoet_Analytical2
+    Math_analitical : M , w' ⊨ Math Alice ⇒ A Alice
+    Math_analitical = box_elim {M = M} boxMath_Analitical Rww'
+    nboxMath_Poetical1 : M , w ⊨ ◇ ~ (Math Alice ⇒ P Alice)
+    nboxMath_Poetical1 = neg_box {M = M} lem nboxMath_Poetical
+    w2 , Rww2 , nMath_P = nboxMath_Poetical1
+--    Poet-poetical : M , w' ⊨ Math Alice ⇒ A Alice
+--    Poet-poetical = box_elim {M = M} boxPoet_Poetical Rww2
+--    nboxMath_Poetical1 : M , w ⊨ Math Alice ⇒ P Alice
+--    nboxMath_Poetical1 = box_elim {M = M} nboxMath_Poetical Rww
   in
     {!!}
